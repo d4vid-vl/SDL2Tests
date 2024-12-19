@@ -3,6 +3,7 @@
 #define FPS 30
 #define FRAME_TARGET_TIME (1000/FPS)
 #include <vector>
+#include "gui.hpp"
 
 // Base constants
 struct State {
@@ -11,16 +12,25 @@ struct State {
     SDL_Texture* texture;
     std::vector<SDL_FPoint> points;
     float my_color[4] = {1, 1, 1, 1};
+    float my_rads[3] = {0.00300, 0.00300, 0.00300};
+    int length = 200;
+    int position[3] = {200, 200, 200};
     u_int32_t pixels[WINDOW_HEIGHT * WINDOW_WIDTH];
     bool isRunning;
 };
 
 struct vec3 {
-    float x,y,z;
+    double x,y,z;
 };
 
 struct connection {
     int a,b;
+};
+
+struct figure_state{
+    std::vector<vec3> points;
+    std::vector<connection> connections;
+    vec3 c{0,0,0};
 };
 
 extern State state;
@@ -33,3 +43,4 @@ void line(float x1, float y1, float x2, float y2);
 void show();
 void rotate(vec3 &point, float x = 1, float y = 1, float z = 1);
 void clear();
+figure_state sel_figure(int figure);

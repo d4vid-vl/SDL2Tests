@@ -4,9 +4,12 @@
 #include <imgui/imgui_impl_sdl2.h>
 #include <imgui/imgui_impl_sdlrenderer2.h>
 #include "window.hpp"
-#include "gui.hpp"
 
 State state;
+int figure;
+int len = 200;
+int pos[3] = {200, 200, 200};
+figure_state figure_s;
 
 void init_window(void) {
     // Init Test
@@ -59,10 +62,37 @@ void line(float x1, float y1, float x2, float y2) {
 }
 
 void show() {
-    GUI_Renderer(state.my_color);
+    // Check rotations
+    for(auto &p : figure_s.points) {
+        p.x -= figure_s.c.x;
+        p.y -= figure_s.c.y;
+        p.z -= figure_s.c.z;
+        rotate(p, 0.003, 0.005, 0.003);
+        p.x += figure_s.c.x;
+        p.y += figure_s.c.y;
+        p.z += figure_s.c.z;
+        pixel(p.x, p.y);
+    }
+
+    for(auto &conn: figure_s.connections) {
+        line(figure_s.points[conn.a].x, figure_s.points[conn.a].y, figure_s.points[conn.b].x, figure_s.points[conn.b].y);
+    }
+
+    // Check figure
+    if (figure != GUI_Renderer(state.my_color, state.my_rads, &state.length, state.position) || state.length != len || state.position[0] != pos[0] || state.position[1] != pos[1]) {
+        figure_s = sel_figure(GUI_Renderer(state.my_color, state.my_rads, &state.length, state.position));
+    }
+    figure = GUI_Renderer(state.my_color, state.my_rads, &state.length, state.position);
+    len = state.length;
+    pos[0] = state.position[0];
+    pos[1] = state.position[1];
+    pos[2] = state.position[2];
+
+    // Draw canvas
     SDL_SetRenderDrawColor(state.renderer, 0, 0, 0, 255);
     SDL_RenderClear(state.renderer);
-
+    
+    // Draw figure
     SDL_SetRenderDrawColor(state.renderer, state.my_color[0]*255, state.my_color[1]*255, state.my_color[2]*255, state.my_color[3]*255);
     for (auto &point : state.points) {
         SDL_RenderDrawPointF(state.renderer, point.x, point.y);
@@ -89,4 +119,82 @@ void rotate(vec3 &point, float x, float y, float z) {
 
 void clear() {
     state.points.clear();
+}
+
+figure_state sel_figure(int figure) {
+    figure_state figure_state;
+    switch (figure) {
+        case 0:
+            figure_state.points = {
+                {float(state.position[0]),                       float(state.position[1]),                          float(state.position[2])},
+                {float(state.position[0]) + float(state.length), float(state.position[1]),                          float(state.position[2])},
+                {float(state.position[0]) + float(state.length), float(state.position[1]) + float(state.length),    float(state.position[2])},
+                {float(state.position[0]),                       float(state.position[1]) + float(state.length),    float(state.position[2])},
+
+                {float(state.position[0]),                       float(state.position[1]),                          float(state.position[2]) + float(state.length)},
+                {float(state.position[0]) + float(state.length), float(state.position[1]),                          float(state.position[2]) + float(state.length)},
+                {float(state.position[0]) + float(state.length), float(state.position[1]) + float(state.length),    float(state.position[2]) + float(state.length)},
+                {float(state.position[0]),                       float(state.position[1]) + float(state.length),    float(state.position[2]) + float(state.length)},
+            };
+
+            figure_state.connections = {
+                {0,4},
+                {1,5},
+                {2,6},
+                {3,7},
+
+                {0,1},
+                {1,2},
+                {2,3},
+                {3,0},
+
+                {4,5},
+                {5,6},
+                {6,7},
+                {7,4}
+            };
+
+            for(auto &p: figure_state.points) {
+                figure_state.c.x += p.x;
+                figure_state.c.y += p.y;
+                figure_state.c.z += p.z;
+            }
+
+            figure_state.c.x /= figure_state.points.size();
+            figure_state.c.y /= figure_state.points.size();
+            figure_state.c.z /= figure_state.points.size();
+            return figure_state;
+
+        case 1:
+            figure_state.points = {
+                {float(state.position[0]),                          float(state.position[1]),                                    float(state.position[2])},
+                {float(state.position[0]) + float(state.length),    float(state.position[1]),                                    float(state.position[2])},
+                {float(state.position[0]) + float(state.length)/2,  float(state.position[1]) + float(state.length)*(sqrt(3)),    float(state.position[2])},
+                {float(state.position[0]) + float(state.length)/2,  float(state.position[1]) + float(state.length)*(sqrt(3))/2,  float(state.position[2]) + float(state.length)},
+            };
+
+            figure_state.connections = {
+                {0,1},
+                {1,2},
+                {2,0},
+
+                {0,3},
+                {1,3},
+                {2,3},
+            };
+
+            for(auto &p: figure_state.points) {
+                figure_state.c.x += p.x;
+                figure_state.c.y += p.y;
+                figure_state.c.z += p.z;
+            }
+
+            figure_state.c.x /= figure_state.points.size();
+            figure_state.c.y /= figure_state.points.size();
+            figure_state.c.z /= figure_state.points.size();
+            return figure_state;
+        
+        default:
+            return figure_state;
+    }
 }
