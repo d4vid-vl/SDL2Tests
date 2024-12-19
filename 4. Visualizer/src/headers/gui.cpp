@@ -3,6 +3,9 @@
 #include <imgui/imgui_impl_sdl2.h>
 #include <imgui/imgui_impl_sdlrenderer2.h>
 
+int select = -1;
+const char* figures[] = { "Cube", "Pyramid" };
+
 void GUI_Init(SDL_Window* window, SDL_Renderer* renderer) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -18,16 +21,21 @@ void GUI_Close() {
     ImGui::DestroyContext();
 }
 
-void GUI_Renderer(float my_color[4]) {
-
-    static int select = -1;
-    const char* figures[] = { "Cube", "Pyramid", "Test1", "Test2" };
+int GUI_Renderer(float my_color[4], float my_rads[3], int* length, int position[2]) {
 
     ImGui_ImplSDLRenderer2_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::Begin("Figure Visualizer");
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoCollapse;
+    window_flags |= ImGuiWindowFlags_NoResize;
+    window_flags |= ImGuiWindowFlags_NoMove;
+
+    const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x, main_viewport->WorkPos.y), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(350, 250), ImGuiCond_FirstUseEver);
+
+    ImGui::Begin("Figure Visualizer", nullptr, window_flags);
     ImGui::Text("Select a Figure: ");
 
     if (ImGui::Button("Select...")) ImGui::OpenPopup("Figure");
@@ -46,6 +54,15 @@ void GUI_Renderer(float my_color[4]) {
     ImGui::Text("Change the color outline: ");
     ImGui::ColorEdit4("Color", my_color);
 
+    ImGui::Text("Rotation (rad): ");
+    ImGui::DragFloat3("Rads", my_rads, 0.00001, -0.005, 0.005, "%.5f");
+    ImGui::Text("Length: ");
+    ImGui::SliderInt("Length", length, 20, 400);
+    ImGui::Text("Position:");
+    ImGui::SliderInt2("Position", position, 0, 700);
+
     ImGui::End();
-    ImGui::Render();    
+    ImGui::Render();
+
+    return select;
 }
