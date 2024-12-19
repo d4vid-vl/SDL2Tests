@@ -67,7 +67,7 @@ void show() {
         p.x -= figure_s.c.x;
         p.y -= figure_s.c.y;
         p.z -= figure_s.c.z;
-        rotate(p, 0.003, 0.005, 0.003);
+        rotate(p, state.my_rads[0], state.my_rads[1], state.my_rads[2]);
         p.x += figure_s.c.x;
         p.y += figure_s.c.y;
         p.z += figure_s.c.z;
